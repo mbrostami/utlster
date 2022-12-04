@@ -21,7 +21,6 @@ func extractClientHellos(file string) ([][]byte, error) {
 			if len(payload) < 9 {
 				continue
 			}
-
 			if isClientHello(payload) {
 				clientHellos = append(clientHellos, payload)
 			}
