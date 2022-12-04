@@ -2,25 +2,62 @@ package main
 
 import (
 	"net"
-	"sync"
 	"time"
 )
 
-// TODO
-func rangeScanTLSPort(workers int) {
-	var wg *sync.WaitGroup
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			scanner("")
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+const workers = 64
+const scanTimeout = 200 * time.Millisecond
 
+type work struct {
+	ip   string
+	port string
 }
 
-func scanner(ip string) bool {
-	_, err := net.DialTimeout("tcp", ip, time.Duration(300)*time.Millisecond)
-	return err == nil
+type result struct {
+	ip   string
+	port string
+	open bool
+}
+
+var workCh chan work
+var resCh chan result
+
+func init() {
+	workCh = make(chan work, workers)
+	resCh = make(chan result, workers)
+
+	for i := 0; i < workers; i++ {
+		go worker(workCh, resCh)
+	}
+}
+
+// returns opens
+func rangeScanTLSPort(cidr string) []string {
+	ips := extractIPsFromCIDR(cidr)
+	go func() {
+		for _, ip := range ips {
+			workCh <- work{ip: ip, port: "443"}
+		}
+	}()
+
+	var opens []string
+	for i := 0; i < len(ips); i++ {
+		res := <-resCh
+		if res.open {
+			opens = append(opens, res.ip)
+		}
+	}
+
+	return opens
+}
+
+func worker(ch chan work, rs chan result) {
+	for w := range ch {
+		_, err := net.DialTimeout("tcp", w.ip+":"+w.port, scanTimeout)
+		rs <- result{
+			ip:   w.ip,
+			port: w.port,
+			open: err == nil,
+		}
+	}
 }

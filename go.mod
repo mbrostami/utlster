@@ -1,8 +1,9 @@
 module github.com/mbrostami/utlster
 
-go 1.19
+go 1.18
 
 require (
+	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/google/gopacket v1.1.19
 	github.com/refraction-networking/utls v1.2.0
 	github.com/rs/zerolog v1.28.0

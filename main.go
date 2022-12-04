@@ -13,6 +13,7 @@ import (
 var flagTest bool
 var flagRemoteIP string
 var flagRemotePort string
+var flagSNI string
 var flagPcap string
 var flagRawClientHello string
 var flagV bool
@@ -21,6 +22,7 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	flag.BoolVar(&flagTest, "test", false, "runs a local server and connects to that - remote ip will be ignored")
+	flag.StringVar(&flagSNI, "sni", "", "custom SNI")
 	flag.StringVar(&flagPcap, "p", "", "PCAP file to extract client hellos")
 	flag.StringVar(&flagRawClientHello, "r", "", "Raw client hello as HEX stream")
 	flag.StringVar(&flagRemoteIP, "remote-ip", "127.0.0.1", "remote ip")
@@ -82,7 +84,7 @@ func main() {
 	for _, clientHello := range clientHellos {
 		i++
 		log.Debug().Msgf("starting tls handshake: %d", i)
-		if err := handshake(rAddr, clientHello); err != nil {
+		if err := handshake(rAddr, flagSNI, clientHello); err != nil {
 			log.Error().Err(err).Send()
 		}
 	}
