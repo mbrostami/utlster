@@ -12,11 +12,14 @@ import (
 
 var flagTest bool
 var flagRemoteIP string
+var flagCIDR string
 var flagRemotePort string
 var flagSNI string
 var flagPcap string
 var flagRawClientHello string
 var flagV bool
+
+// TODO option to repeat sending packets based on pcap
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -26,7 +29,8 @@ func main() {
 	flag.StringVar(&flagPcap, "p", "", "PCAP file to extract client hellos")
 	flag.StringVar(&flagRawClientHello, "r", "", "Raw client hello as HEX stream")
 	flag.StringVar(&flagRemoteIP, "remote-ip", "127.0.0.1", "remote ip")
-	flag.StringVar(&flagRemotePort, "remote-port", "4446", "remote port")
+	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip - remote ip option will be ignored")
+	flag.StringVar(&flagRemotePort, "remote-port", "443", "remote port")
 	flag.BoolVar(&flagV, "v", false, "verbosity")
 	flag.Parse()
 
@@ -40,9 +44,14 @@ func main() {
 		log.Fatal().Msg("pcap or raw should be specifed")
 	}
 
-	if flagRemoteIP == "" || flagRemotePort == "" {
+	if flagRemotePort == "" {
 		flag.Usage()
-		log.Fatal().Msg("remote-ip and remote-port are required")
+		log.Fatal().Msg("remote-ip or cidr and remote-port are required")
+	}
+
+	if flagRemoteIP == "" && flagCIDR == "" {
+		flag.Usage()
+		log.Fatal().Msg("remote-ip or cidr is required")
 	}
 
 	clientHellos := make([][]byte, 0)
@@ -79,13 +88,22 @@ func main() {
 		}
 	}
 
-	rAddr, _ := net.ResolveTCPAddr("tcp", flagRemoteIP+":"+flagRemotePort)
-	i := 0
-	for _, clientHello := range clientHellos {
-		i++
-		log.Debug().Msgf("starting tls handshake: %d", i)
-		if err := handshake(rAddr, flagSNI, clientHello); err != nil {
-			log.Error().Err(err).Send()
+	remoteIPs := []string{flagRemoteIP}
+
+	if flagCIDR != "" && !flagTest {
+		remoteIPs = rangeScanTLSPort(flagCIDR, flagRemotePort)
+		log.Debug().Msgf("total %d ip found", len(remoteIPs))
+	}
+
+	for _, rip := range remoteIPs {
+		rAddr, _ := net.ResolveTCPAddr("tcp", rip+":"+flagRemotePort)
+		i := 0
+		for _, clientHello := range clientHellos {
+			i++
+			log.Debug().Msgf("starting tls handshake: %d", i)
+			if err := handshake(rAddr, flagSNI, clientHello); err != nil {
+				log.Error().Err(err).Send()
+			}
 		}
 	}
 }

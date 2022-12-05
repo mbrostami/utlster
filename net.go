@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/apparentlymart/go-cidr/cidr"
 	tls "github.com/refraction-networking/utls"
 	"github.com/rs/zerolog/log"
 )
@@ -104,19 +103,4 @@ func handshake(rAddr *net.TCPAddr, sni string, clientHello []byte) error {
 func fromHex(s string) []byte {
 	b, _ := hex.DecodeString(s)
 	return b
-}
-
-func extractIPsFromCIDR(ipRange string) []string {
-	_, IPnet, _ := net.ParseCIDR(ipRange)
-	f, l := cidr.AddressRange(IPnet)
-
-	var rng []string
-	for i := f; i.Equal(l); i = cidr.Inc(f) {
-		if i.IsMulticast() || i.IsUnspecified() {
-			continue
-		}
-		rng = append(rng, i.String())
-	}
-
-	return rng
 }

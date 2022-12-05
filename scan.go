@@ -22,21 +22,19 @@ type result struct {
 var workCh chan work
 var resCh chan result
 
-func init() {
+// returns opens
+func rangeScanTLSPort(cidr string, remotePort string) []string {
 	workCh = make(chan work, workers)
 	resCh = make(chan result, workers)
 
 	for i := 0; i < workers; i++ {
 		go worker(workCh, resCh)
 	}
-}
 
-// returns opens
-func rangeScanTLSPort(cidr string) []string {
 	ips := extractIPsFromCIDR(cidr)
 	go func() {
 		for _, ip := range ips {
-			workCh <- work{ip: ip, port: "443"}
+			workCh <- work{ip: ip, port: remotePort}
 		}
 	}()
 
