@@ -17,6 +17,7 @@ var flagRemotePort string
 var flagSNI string
 var flagPcap string
 var flagRawClientHello string
+var flagOnce bool
 var flagV bool
 
 // TODO option to repeat sending packets based on pcap
@@ -31,6 +32,7 @@ func main() {
 	flag.StringVar(&flagRemoteIP, "remote-ip", "127.0.0.1", "remote ip")
 	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip - remote ip option will be ignored")
 	flag.StringVar(&flagRemotePort, "remote-port", "443", "remote port")
+	flag.BoolVar(&flagOnce, "once", false, "only one handshake to one remote")
 	flag.BoolVar(&flagV, "v", false, "verbosity")
 	flag.Parse()
 
@@ -103,6 +105,9 @@ func main() {
 			log.Debug().Msgf("starting tls handshake: %d", i)
 			if err := handshake(rAddr, flagSNI, clientHello); err != nil {
 				log.Error().Err(err).Send()
+			}
+			if flagOnce {
+				return
 			}
 		}
 	}

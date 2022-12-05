@@ -5,7 +5,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	tls "github.com/refraction-networking/utls"
-	"github.com/rs/zerolog/log"
 )
 
 func extractClientHellos(file string) ([][]byte, error) {
@@ -44,7 +43,7 @@ func extractClientHellos(file string) ([][]byte, error) {
 
 func isClientHello(data []byte) bool {
 	fingerPrinter := &tls.Fingerprinter{}
-	generatedSpec, err := fingerPrinter.FingerprintClientHello(data)
+	_, err := fingerPrinter.FingerprintClientHello(data)
 	if err != nil {
 		return false
 	}
