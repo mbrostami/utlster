@@ -48,7 +48,6 @@ func isClientHello(data []byte) bool {
 	if err != nil {
 		return false
 	}
-	log.Debug().Msgf("found client hello: %+v", generatedSpec)
 	return true
 }
 
