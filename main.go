@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"flag"
 	"net"
 	"os"
@@ -99,6 +100,7 @@ func main() {
 		log.Debug().Msgf("total %d ip found", len(remoteIPs))
 	}
 
+NextIP:
 	for _, rip := range remoteIPs {
 		rAddr, _ := net.ResolveTCPAddr("tcp", rip+":"+flagRemotePort)
 		i := 0
@@ -107,6 +109,9 @@ func main() {
 			log.Debug().Msgf("starting tls handshake %d to %s", i, rAddr.String())
 			if err := handshake(rAddr, flagSNI, clientHello); err != nil {
 				log.Error().Err(err).Send()
+				if errors.Is(err, errTCPConn) {
+					continue NextIP
+				}
 			}
 
 			if flagOnce {
