@@ -5,6 +5,8 @@ Usage of utlster
         scan cidr with port 443 and use IPs as remote-ip - remote ip option will be ignored
   -once
         only one handshake to one remote
+  -one-to-all
+        only one handshake to all the remotes
   -p string
         PCAP file to extract client hellos
   -r string
