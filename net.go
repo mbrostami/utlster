@@ -10,6 +10,7 @@ import (
 
 	tls "github.com/refraction-networking/utls"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/cryptobyte"
 )
 
 var testRSACertificate = fromHex("3082024b308201b4a003020102020900e8f09d3fe25beaa6300d06092a864886f70d01010b0500301f310b3009060355040a1302476f3110300e06035504031307476f20526f6f74301e170d3136303130313030303030305a170d3235303130313030303030305a301a310b3009060355040a1302476f310b300906035504031302476f30819f300d06092a864886f70d010101050003818d0030818902818100db467d932e12270648bc062821ab7ec4b6a25dfe1e5245887a3647a5080d92425bc281c0be97799840fb4f6d14fd2b138bc2a52e67d8d4099ed62238b74a0b74732bc234f1d193e596d9747bf3589f6c613cc0b041d4d92b2b2423775b1c3bbd755dce2054cfa163871d1e24c4f31d1a508baab61443ed97a77562f414c852d70203010001a38193308190300e0603551d0f0101ff0404030205a0301d0603551d250416301406082b0601050507030106082b06010505070302300c0603551d130101ff0402300030190603551d0e041204109f91161f43433e49a6de6db680d79f60301b0603551d230414301280104813494d137e1631bba301d5acab6e7b30190603551d1104123010820e6578616d706c652e676f6c616e67300d06092a864886f70d01010b0500038181009d30cc402b5b50a061cbbae55358e1ed8328a9581aa938a495a1ac315a1a84663d43d32dd90bf297dfd320643892243a00bccf9c7db74020015faad3166109a276fd13c3cce10c5ceeb18782f16c04ed73bbb343778d0c1cf10fa1d8408361c94c722b9daedb4606064df4c1b33ec0d1bd42d4dbfe3d1360845c21d33be9fae7")
@@ -19,14 +20,22 @@ var errTCPConn = errors.New("tcp connection failed")
 func clientHandshake(uConn *tls.UConn, sni string, clientHello []byte) error {
 
 	fingerPrinter := &tls.Fingerprinter{}
-	generatedSpec, err := fingerPrinter.FingerprintClientHello(clientHello)
 
+	generatedSpec, err := fingerPrinter.FingerprintClientHello(clientHello)
 	if err != nil {
 		return fmt.Errorf("fingerprinting failed: %v", err)
 	}
 
-	if sni != "" {
-		uConn.SetSNI(sni)
+	uConn.SetSNI(sni)
+
+	// use received client hello SNI
+	if sni == "" {
+		s := cryptobyte.String(clientHello)
+		s.Skip(5) // skip 8 bit content type - 16 bit version 16 bit length
+		if chMsg := tls.UnmarshalClientHello(s); chMsg != nil {
+			log.Debug().Msgf("SNI from client hello is going to be used %s", chMsg.ServerName)
+			uConn.SetSNI(chMsg.ServerName)
+		}
 	}
 
 	if err := uConn.ApplyPreset(generatedSpec); err != nil {
