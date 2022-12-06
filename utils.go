@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"net"
+	"os"
 
 	"github.com/apparentlymart/go-cidr/cidr"
+	"github.com/rs/zerolog/log"
 )
 
 func extractIPsFromCIDR(ipRange string) []string {
@@ -19,4 +23,30 @@ func extractIPsFromCIDR(ipRange string) []string {
 	}
 
 	return rng
+}
+
+func readIPFile(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	invalid := 0
+	for scanner.Scan() {
+		ip, err := net.ResolveIPAddr("ip", scanner.Text())
+		if err != nil {
+			invalid++
+			log.Debug().Msgf("failed to parse IP %s: %v", scanner.Text(), err)
+		}
+		lines = append(lines, ip.String())
+	}
+
+	if invalid > 0 {
+		return lines, fmt.Errorf("total %d ip are invalid", invalid)
+	}
+
+	return lines, scanner.Err()
 }

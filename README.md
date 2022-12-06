@@ -12,7 +12,9 @@ Usage of utlster
   -r string
         Raw client hello as HEX stream
   -remote-ip string
-        remote ip (default "127.0.0.1")
+        remote ip
+  -remote-ip-list string
+        path to a file containing remote ip addresses (one ip per line)
   -remote-port string
         remote port (default "443")
   -sni string

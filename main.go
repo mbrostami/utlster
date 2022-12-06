@@ -18,6 +18,7 @@ var flagRemotePort string
 var flagSNI string
 var flagPcap string
 var flagRawClientHello string
+var flagRemoteIPList string
 var flagOnce bool
 var flagOneToAll bool
 var flagV bool
@@ -31,7 +32,8 @@ func main() {
 	flag.StringVar(&flagSNI, "sni", "", "custom SNI")
 	flag.StringVar(&flagPcap, "p", "", "PCAP file to extract client hellos")
 	flag.StringVar(&flagRawClientHello, "r", "", "Raw client hello as HEX stream")
-	flag.StringVar(&flagRemoteIP, "remote-ip", "127.0.0.1", "remote ip")
+	flag.StringVar(&flagRemoteIP, "remote-ip", "", "remote ip")
+	flag.StringVar(&flagRemoteIPList, "remote-ip-list", "", "path to a file containing remote ip addresses (one ip per line)")
 	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip - remote ip option will be ignored")
 	flag.StringVar(&flagRemotePort, "remote-port", "443", "remote port")
 	flag.BoolVar(&flagOnce, "once", false, "only one handshake to one remote")
@@ -54,9 +56,9 @@ func main() {
 		log.Fatal().Msg("remote-ip or cidr and remote-port are required")
 	}
 
-	if flagRemoteIP == "" && flagCIDR == "" {
+	if flagRemoteIP == "" && flagCIDR == "" && flagRemoteIPList == "" {
 		flag.Usage()
-		log.Fatal().Msg("remote-ip or cidr is required")
+		log.Fatal().Msg("remote-ip or cidr or remote-ip-list is required")
 	}
 
 	clientHellos := make([]ClientHello, 0)
@@ -95,11 +97,24 @@ func main() {
 		}
 	}
 
-	remoteIPs := []string{flagRemoteIP}
+	remoteIPs := make([]string, 0)
+
+	if flagRemoteIP != "" {
+		remoteIPs = append(remoteIPs, flagRemoteIP)
+	}
 
 	if flagCIDR != "" && !flagTest {
-		remoteIPs = rangeScanTLSPort(flagCIDR, flagRemotePort)
+		remoteIPs = append(remoteIPs, rangeScanTLSPort(flagCIDR, flagRemotePort)...)
 		log.Info().Msgf("total %d ip found", len(remoteIPs))
+	}
+
+	if flagRemoteIPList != "" && !flagTest {
+		ips, err := readIPFile(flagRemoteIPList)
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
+		log.Info().Msgf("parsed %d ips from file", len(ips))
+		remoteIPs = append(remoteIPs, ips...)
 	}
 
 NextIP:
