@@ -23,7 +23,7 @@ var workCh chan work
 var resCh chan result
 
 // returns opens
-func rangeScanTLSPort(cidr string, remotePort string) []string {
+func rangePortScan(cidr string, remotePort string) []string {
 	workCh = make(chan work, workers)
 	resCh = make(chan result, workers)
 

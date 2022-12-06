@@ -36,6 +36,9 @@ func readIPFile(path string) ([]string, error) {
 	scanner := bufio.NewScanner(file)
 	invalid := 0
 	for scanner.Scan() {
+		if scanner.Text()[:1] == "#" {
+			continue
+		}
 		ip, err := net.ResolveIPAddr("ip", scanner.Text())
 		if err != nil {
 			invalid++

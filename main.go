@@ -34,7 +34,7 @@ func main() {
 	flag.StringVar(&flagRawClientHello, "r", "", "Raw client hello as HEX stream")
 	flag.StringVar(&flagRemoteIP, "remote-ip", "", "remote ip")
 	flag.StringVar(&flagRemoteIPList, "remote-ip-list", "", "path to a file containing remote ip addresses (one ip per line)")
-	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip")
+	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip ")
 	flag.StringVar(&flagRemotePort, "remote-port", "443", "remote port")
 	flag.BoolVar(&flagOnce, "once", false, "only one handshake to one remote")
 	flag.BoolVar(&flagOneToAll, "one-to-all", false, "only one handshake to all the remotes")
@@ -104,7 +104,7 @@ func main() {
 	}
 
 	if flagCIDR != "" && !flagTest {
-		remoteIPs = append(remoteIPs, rangeScanTLSPort(flagCIDR, flagRemotePort)...)
+		remoteIPs = append(remoteIPs, rangePortScan(flagCIDR, flagRemotePort)...)
 		log.Info().Msgf("total %d ip found", len(remoteIPs))
 	}
 
