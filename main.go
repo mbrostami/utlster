@@ -59,31 +59,33 @@ func main() {
 		log.Fatal().Msg("remote-ip or cidr is required")
 	}
 
-	clientHellos := make([][]byte, 0)
+	clientHellos := make([]ClientHello, 0)
 
 	if flagRawClientHello != "" {
-		log.Debug().Msg("decoding client hello from input")
+		log.Info().Msg("decoding client hello from input")
 		rawCapturedClientHelloBytes, err := hex.DecodeString(flagRawClientHello)
 		if err != nil {
 			log.Fatal().Err(err).Send()
 		}
-		if !isClientHello(rawCapturedClientHelloBytes) {
+		if !IsClientHello(rawCapturedClientHelloBytes) {
 			log.Fatal().Msg("given raw client hello is not valid!")
 		}
-		clientHellos = append(clientHellos, rawCapturedClientHelloBytes)
+		clientHellos = append(clientHellos, ClientHello{
+			Raw: rawCapturedClientHelloBytes,
+		})
 	}
 
 	if flagPcap != "" {
-		log.Debug().Msg("parsing the pcap file to extract client helloes ... ")
+		log.Info().Msg("parsing the pcap file to extract client helloes ... ")
 		var err error
-		clientHellos, err = extractClientHellos(flagPcap)
+		clientHellos, err = ExtractClientHellos(flagPcap)
 		if err != nil {
 			log.Fatal().Err(err).Send()
 		}
 		if len(clientHellos) == 0 {
 			log.Fatal().Msg("client hello not found")
 		}
-		log.Debug().Msgf("%d client hello found", len(clientHellos))
+		log.Info().Msgf("%d client hello found", len(clientHellos))
 	}
 
 	if flagTest {
@@ -97,7 +99,7 @@ func main() {
 
 	if flagCIDR != "" && !flagTest {
 		remoteIPs = rangeScanTLSPort(flagCIDR, flagRemotePort)
-		log.Debug().Msgf("total %d ip found", len(remoteIPs))
+		log.Info().Msgf("total %d ip found", len(remoteIPs))
 	}
 
 NextIP:
@@ -106,13 +108,14 @@ NextIP:
 		i := 0
 		for _, clientHello := range clientHellos {
 			i++
-			log.Debug().Msgf("starting tls handshake %d to %s", i, rAddr.String())
+			log.Info().Msgf("%d: starting tls handshake %x to %s", i, clientHello.JA3[:], rAddr.String())
 			if err := handshake(rAddr, flagSNI, clientHello); err != nil {
 				log.Error().Err(err).Send()
 				if errors.Is(err, errTCPConn) {
 					continue NextIP
 				}
 			}
+			log.Info().Msg("handshake done!")
 
 			if flagOnce {
 				return

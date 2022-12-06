@@ -17,11 +17,11 @@ var testRSACertificate = fromHex("3082024b308201b4a003020102020900e8f09d3fe25bea
 var testRSAPrivateKey, _ = x509.ParsePKCS1PrivateKey(fromHex("3082025b02010002818100db467d932e12270648bc062821ab7ec4b6a25dfe1e5245887a3647a5080d92425bc281c0be97799840fb4f6d14fd2b138bc2a52e67d8d4099ed62238b74a0b74732bc234f1d193e596d9747bf3589f6c613cc0b041d4d92b2b2423775b1c3bbd755dce2054cfa163871d1e24c4f31d1a508baab61443ed97a77562f414c852d702030100010281800b07fbcf48b50f1388db34b016298b8217f2092a7c9a04f77db6775a3d1279b62ee9951f7e371e9de33f015aea80660760b3951dc589a9f925ed7de13e8f520e1ccbc7498ce78e7fab6d59582c2386cc07ed688212a576ff37833bd5943483b5554d15a0b9b4010ed9bf09f207e7e9805f649240ed6c1256ed75ab7cd56d9671024100fded810da442775f5923debae4ac758390a032a16598d62f059bb2e781a9c2f41bfa015c209f966513fe3bf5a58717cbdb385100de914f88d649b7d15309fa49024100dd10978c623463a1802c52f012cfa72ff5d901f25a2292446552c2568b1840e49a312e127217c2186615aae4fb6602a4f6ebf3f3d160f3b3ad04c592f65ae41f02400c69062ca781841a09de41ed7a6d9f54adc5d693a2c6847949d9e1358555c9ac6a8d9e71653ac77beb2d3abaf7bb1183aa14278956575dbebf525d0482fd72d90240560fe1900ba36dae3022115fd952f2399fb28e2975a1c3e3d0b679660bdcb356cc189d611cfdd6d87cd5aea45aa30a2082e8b51e94c2f3dd5d5c6036a8a615ed0240143993d80ece56f877cb80048335701eb0e608cc0c1ca8c2227b52edf8f1ac99c562f2541b5ce81f0515af1c5b4770dba53383964b4b725ff46fdec3d08907df"))
 var errTCPConn = errors.New("tcp connection failed")
 
-func clientHandshake(uConn *tls.UConn, sni string, clientHello []byte) error {
+func clientHandshake(uConn *tls.UConn, sni string, clientHello ClientHello) error {
 
 	fingerPrinter := &tls.Fingerprinter{}
 
-	generatedSpec, err := fingerPrinter.FingerprintClientHello(clientHello)
+	generatedSpec, err := fingerPrinter.FingerprintClientHello(clientHello.Raw)
 	if err != nil {
 		return fmt.Errorf("fingerprinting failed: %v", err)
 	}
@@ -30,7 +30,7 @@ func clientHandshake(uConn *tls.UConn, sni string, clientHello []byte) error {
 
 	// use received client hello SNI
 	if sni == "" {
-		s := cryptobyte.String(clientHello)
+		s := cryptobyte.String(clientHello.Raw)
 		s.Skip(5) // skip 8 bit content type - 16 bit version 16 bit length
 		if chMsg := tls.UnmarshalClientHello(s); chMsg != nil {
 			log.Debug().Msgf("SNI from client hello is going to be used %s", chMsg.ServerName)
@@ -96,7 +96,7 @@ func serveTLS(l net.Listener, tlsConfig *tls.Config) error {
 	}
 }
 
-func handshake(rAddr *net.TCPAddr, sni string, clientHello []byte) error {
+func handshake(rAddr *net.TCPAddr, sni string, clientHello ClientHello) error {
 	log.Debug().Msgf("connecting to %s", rAddr.String())
 	conn, err := net.DialTimeout("tcp", rAddr.String(), 500*time.Millisecond)
 	if err != nil {

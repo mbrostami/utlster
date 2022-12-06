@@ -1,13 +1,21 @@
 package main
 
 import (
+	"crypto/md5"
+
+	"github.com/dreadl0ck/ja3"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	tls "github.com/refraction-networking/utls"
 )
 
-func extractClientHellos(file string) ([][]byte, error) {
+type ClientHello struct {
+	Raw []byte
+	JA3 [md5.Size]byte
+}
+
+func ExtractClientHellos(file string) ([]ClientHello, error) {
 	handle, err := pcap.OpenOffline(file)
 	if err != nil {
 		return nil, err
@@ -16,7 +24,7 @@ func extractClientHellos(file string) ([][]byte, error) {
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packetSource.SkipDecodeRecovery = true
 	packetSource.DecodeStreamsAsDatagrams = true
-	clientHellos := make([][]byte, 0)
+	clientHellos := make([]ClientHello, 0)
 	for packet := range packetSource.Packets() {
 		tlsLayer := packet.Layer(layers.LayerTypeTLS)
 		if tlsLayer == nil {
@@ -33,21 +41,21 @@ func extractClientHellos(file string) ([][]byte, error) {
 		}
 
 		if layer.Handshake[0].TLSRecordHeader.ContentType == layers.TLSHandshake &&
-			isClientHello(layer.Contents) {
-			clientHellos = append(clientHellos, layer.Contents)
+			IsClientHello(layer.Contents) {
+			clientHellos = append(clientHellos, ClientHello{
+				Raw: layer.Contents,
+				JA3: ja3.DigestPacket(packet),
+			})
 		}
 	}
 
 	return clientHellos, nil
 }
 
-func isClientHello(data []byte) bool {
+func IsClientHello(data []byte) bool {
 	fingerPrinter := &tls.Fingerprinter{}
 	_, err := fingerPrinter.FingerprintClientHello(data)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // 0x16 0x03 X Y Z 0x01 A B C
