@@ -1,8 +1,9 @@
 # utlster
+
 ```
 Usage of utlster
   -cidr string
-        scan cidr with port 443 and use IPs as remote-ip - remote ip option will be ignored
+        scan cidr with port 443 and use IPs as remote-ip
   -once
         only one handshake to one remote
   -one-to-all
