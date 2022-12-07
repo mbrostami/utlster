@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.34
         with:
-          pre_command: apt update && apt install libpcap-dev
+          pre_command: apt-get update && apt-get install -y libpcap-dev
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
