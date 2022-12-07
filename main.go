@@ -23,8 +23,6 @@ var flagOnce bool
 var flagOneToAll bool
 var flagV bool
 
-// TODO option to repeat sending packets based on pcap
-
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
@@ -34,14 +32,14 @@ func main() {
 	flag.StringVar(&flagRawClientHello, "r", "", "Raw client hello as HEX stream")
 	flag.StringVar(&flagRemoteIP, "remote-ip", "", "remote ip")
 	flag.StringVar(&flagRemoteIPList, "remote-ip-list", "", "path to a file containing remote ip addresses (one ip per line)")
-	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with port 443 and use IPs as remote-ip ")
+	flag.StringVar(&flagCIDR, "cidr", "", "scan cidr with remote port and use IPs as remote-ip")
 	flag.StringVar(&flagRemotePort, "remote-port", "443", "remote port")
 	flag.BoolVar(&flagOnce, "once", false, "only one handshake to one remote")
 	flag.BoolVar(&flagOneToAll, "one-to-all", false, "only one handshake to all the remotes")
 	flag.BoolVar(&flagV, "v", false, "verbosity")
 	flag.Parse()
 
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if flagV {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
