@@ -1,0 +1,27 @@
+name: Release
+
+# on:
+#   release:
+#     types: [created]
+on: [push]
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [darwin]
+        goarch: [amd64]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: wangyoucao577/go-release-action@v1.34
+        with:
+          release_tag: v1.0.0
+          build_command: env CGO_ENABLED=1 go build
+          pre_command: apt-get update && apt-get install -y libpcap-dev
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          binary_name: "utlster"
+          extra_files: README.md
