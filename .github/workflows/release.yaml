@@ -39,7 +39,6 @@ jobs:
         echo platforms=${{ steps.prepare.outputs.docker_platforms }}
         echo avail_platforms=${{ steps.buildx.outputs.platforms }}
 
-      # https://github.com/actions/checkout
     - name: Checkout
       uses: actions/checkout@v2
 
@@ -48,7 +47,7 @@ jobs:
         docker buildx bake \
           --set ${{ github.event.repository.name }}.platform=${{ steps.prepare.outputs.docker_platforms }} \
           --set ${{ github.event.repository.name }}.output=type=image,push=false \
-          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}" \
+          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:v1" \
           --file docker-compose.yaml
 
     - name: Docker Login
@@ -58,14 +57,14 @@ jobs:
       run: |
         echo "${DOCKER_PASSWORD}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Docker Buildx (push)
-      if: success()
-      run: |
-        docker buildx bake \
-          --set ${{ github.event.repository.name }}.platform=${{ steps.prepare.outputs.docker_platforms }} \
-          --set ${{ github.event.repository.name }}.output=type=image,push=true \
-          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}" \
-          --file docker-compose.yaml
+    # - name: Docker Buildx (push)
+    #   if: success()
+    #   run: |
+    #     docker buildx bake \
+    #       --set ${{ github.event.repository.name }}.platform=${{ steps.prepare.outputs.docker_platforms }} \
+    #       --set ${{ github.event.repository.name }}.output=type=image,push=true \
+    #       --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}" \
+    #       --file docker-compose.yaml
 
     - name: Clear
       if: always()
