@@ -7,7 +7,7 @@ COPY --from=xx / /
 RUN apk add clang lld
 # copy source
 ARG TARGETPLATFORM
-RUN xx-apk add gcc musl-dev
+RUN xx-apk add gcc musl-dev libpcap-dev
 
 ADD . /src
 WORKDIR /src
