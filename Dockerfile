@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-FROM --platform=$BUILDPLATFORM alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.18-alpine AS builder
 # copy xx scripts to your build stage
 COPY --from=xx / /
 
@@ -13,7 +13,6 @@ ADD . /src
 WORKDIR /src
 
 RUN xx-go build -v && xx-verify utlster
-
 
 FROM alpine:latest
 
