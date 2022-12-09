@@ -1,19 +1,18 @@
-FROM --platform=$BUILDPLATFORM golang:1.19-alpine as builder
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-# Convert TARGETPLATFORM to GOARCH format
-# https://github.com/tonistiigi/xx
-COPY --from=tonistiigi/xx:golang / /
+FROM --platform=$BUILDPLATFORM alpine AS builder
+# copy xx scripts to your build stage
+COPY --from=xx / /
 
+RUN apk add clang lld
+# copy source
 ARG TARGETPLATFORM
-RUN apk add --no-cache musl-dev git gcc
+RUN xx-apk add gcc musl-dev
 
 ADD . /src
 WORKDIR /src
 
-ENV CGO_ENABLED=1
-ENV GO111MODULE=on
-RUN go env 
-RUN go build -v
+RUN xx-go build -v && xx-verify utlster
 
 FROM alpine:latest
 
