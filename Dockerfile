@@ -12,7 +12,8 @@ WORKDIR /src
 
 ENV CGO_ENABLED=1
 ENV GO111MODULE=on
-RUN go env && xx-go build -v && xx-verify utlster
+RUN go env 
+RUN go build -v
 
 FROM alpine:latest
 
