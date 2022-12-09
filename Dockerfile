@@ -14,6 +14,7 @@ WORKDIR /src
 
 RUN xx-go build -v && xx-verify utlster
 
+
 FROM alpine:latest
 
 WORKDIR /bin/
