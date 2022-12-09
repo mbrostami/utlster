@@ -12,6 +12,7 @@ RUN xx-apk add gcc musl-dev libpcap-dev
 ADD . /src
 WORKDIR /src
 
+ENV CGO_ENABLED=1
 RUN xx-go build -v && xx-verify utlster
 
 FROM alpine:latest
