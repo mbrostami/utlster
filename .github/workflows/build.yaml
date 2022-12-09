@@ -1,6 +1,6 @@
 name: Test
 
-# on: [push]
+on: [push]
 
 jobs:
   build:
@@ -16,9 +16,6 @@ jobs:
 
       - name: Dependencies
         run: sudo apt update && sudo apt install libpcap-dev
-
-      - name: Build
-        run: go build -v ./...
 
       - name: Test
         run: go test -v ./...

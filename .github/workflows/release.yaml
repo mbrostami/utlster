@@ -1,7 +1,10 @@
 # ref: https://github.com/crazy-max/diun/blob/master/.github/workflows/build.yml
 
 name: Docker
-on: [push]
+on:
+  release:
+    types: [created]
+    
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -47,7 +50,7 @@ jobs:
         docker buildx bake \
           --set ${{ github.event.repository.name }}.platform=${{ steps.prepare.outputs.docker_platforms }} \
           --set ${{ github.event.repository.name }}.output=type=image,push=false \
-          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:beta" \
+          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}" \
           --file docker-compose.yaml
 
     - name: Docker Login
@@ -63,7 +66,7 @@ jobs:
         docker buildx bake \
           --set ${{ github.event.repository.name }}.platform=${{ steps.prepare.outputs.docker_platforms }} \
           --set ${{ github.event.repository.name }}.output=type=image,push=true \
-          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:beta" \
+          --set ${{ github.event.repository.name }}.tags="${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}" \
           --file docker-compose.yaml
 
     - name: Clear
