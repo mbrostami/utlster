@@ -19,6 +19,7 @@ FROM alpine:latest
 
 WORKDIR /bin/
 
+RUN apk add libpcap-dev
 COPY --from=builder /src/utlster .
 
 ENTRYPOINT ["/bin/utlster"]
