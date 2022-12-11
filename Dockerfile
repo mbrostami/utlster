@@ -21,5 +21,5 @@ WORKDIR /bin/
 
 RUN apk add libpcap-dev
 COPY --from=builder /src/utlster .
-
+COPY ./example /example
 ENTRYPOINT ["/bin/utlster"]

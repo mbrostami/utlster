@@ -1,7 +1,16 @@
-# utlster
+# Utlster
 
+TLS handshake with utls
+
+## Docker 
+
+Test with an example:  
 ```
-Usage of utlster
+docker run -it --rm --name utlster mbrostamih/utlster:latest -v -test -p /example/telegram.pcap
+```
+
+## Usage of utlster
+```
   -cidr string
         scan cidr with port 443 and use IPs as remote-ip
   -once

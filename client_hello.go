@@ -22,30 +22,17 @@ func ExtractClientHellos(file string) ([]ClientHello, error) {
 	}
 
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-	packetSource.SkipDecodeRecovery = true
 	packetSource.DecodeStreamsAsDatagrams = true
 	clientHellos := make([]ClientHello, 0)
+
 	for packet := range packetSource.Packets() {
-		tlsLayer := packet.Layer(layers.LayerTypeTLS)
-		if tlsLayer == nil {
-			continue
-		}
-
-		layer, ok := tlsLayer.(*layers.TLS)
-		if !ok {
-			continue
-		}
-
-		if len(layer.Handshake) == 0 {
-			continue
-		}
-
-		if layer.Handshake[0].TLSRecordHeader.ContentType == layers.TLSHandshake &&
-			IsClientHello(layer.Contents) {
-			clientHellos = append(clientHellos, ClientHello{
-				Raw: layer.Contents,
-				JA3: ja3.DigestPacket(packet),
-			})
+		if tcpLayer, ok := packet.Layer(layers.LayerTypeTCP).(*layers.TCP); ok {
+			if IsClientHello(tcpLayer.Payload) {
+				clientHellos = append(clientHellos, ClientHello{
+					Raw: tcpLayer.Payload,
+					JA3: ja3.DigestPacket(packet),
+				})
+			}
 		}
 	}
 

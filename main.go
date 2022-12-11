@@ -54,6 +54,13 @@ func main() {
 		log.Fatal().Msg("remote-ip or cidr and remote-port are required")
 	}
 
+	if flagTest {
+		flagRemoteIP = "127.0.0.1"
+		if err := listenTLS(flagRemoteIP, flagRemotePort); err != nil {
+			log.Fatal().Err(err).Send()
+		}
+	}
+
 	if flagRemoteIP == "" && flagCIDR == "" && flagRemoteIPList == "" {
 		flag.Usage()
 		log.Fatal().Msg("remote-ip or cidr or remote-ip-list is required")
@@ -86,13 +93,6 @@ func main() {
 			log.Fatal().Msg("client hello not found")
 		}
 		log.Info().Msgf("%d client hello found", len(clientHellos))
-	}
-
-	if flagTest {
-		flagRemoteIP = "127.0.0.1"
-		if err := listenTLS(flagRemoteIP, flagRemotePort); err != nil {
-			log.Fatal().Err(err).Send()
-		}
 	}
 
 	remoteIPs := make([]string, 0)
