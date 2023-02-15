@@ -3,7 +3,7 @@
 Utlster is a command-line application that allows you to perform custom TLS handshakes with remote servers using extracted client hellos (fingerprints) from PCAP files. It uses the `utls` library to establish connections with TLS servers.  
 
 
-It can perform customized handshakes with specific SNI values and multiple remote IP addresses. You can choose to perform a handshake with all IP addresses in a given CIDR range that has open 443 port, one remote IP address, or multiple remote IP addresses. It also supports running a local server for testing purposes. You can also specify the path to a PCAP file containing client hellos or a raw client hello as a hexadecimal string to use for the handshake.  
+It can perform customized handshakes with specific SNI values and multiple remote IP addresses. You can choose to perform a handshake with all IP addresses in a given CIDR range that have port 443 open, one remote IP address, or multiple remote IP addresses. It also supports running a local server for testing purposes. You can also specify the path to a PCAP file containing client hellos or a raw client hello as a hexadecimal string to use for the handshake.  
 
 
 
